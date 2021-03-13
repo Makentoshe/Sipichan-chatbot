@@ -1,0 +1,49 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+apply plugin: 'kotlin'
+apply plugin: 'application'
+
+group 'com.makentoshe.schatbot'
+version '1.0-SNAPSHOT'
+mainClassName = "io.ktor.server.cio.EngineMain"
+
+sourceSets {
+    main.kotlin.srcDirs = main.java.srcDirs = ['src']
+    test.kotlin.srcDirs = test.java.srcDirs = ['test']
+    main.resources.srcDirs = ['resources']
+    test.resources.srcDirs = ['testresources']
+}
+
+repositories {
+    mavenLocal()
+    jcenter()
+    maven { url 'https://kotlin.bintray.com/ktor' }
+    maven { url 'https://kotlin.bintray.com/kotlinx' }
+    maven { url "https://maven.pkg.jetbrains.space/public/p/space/maven" }
+}
+
+dependencies {
+    // Space api sdk
+    // https://www.jetbrains.com/help/space/space-sdk.html
+    implementation "org.jetbrains:space-sdk-jvm:61400-beta"
+
+    // Jackson
+    // https://github.com/FasterXML/jackson-module-kotlin
+    implementation "com.fasterxml.jackson.module:jackson-module-kotlin:2.11.3"
+
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+    implementation "io.ktor:ktor-server-cio:$ktor_version"
+    implementation "ch.qos.logback:logback-classic:$logback_version"
+    implementation "io.ktor:ktor-client-core:$ktor_version"
+    implementation "io.ktor:ktor-client-core-jvm:$ktor_version"
+    implementation "io.ktor:ktor-client-cio:$ktor_version"
+    testImplementation "io.ktor:ktor-server-tests:$ktor_version"
+}
