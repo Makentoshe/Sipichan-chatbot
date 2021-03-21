@@ -4,9 +4,14 @@ import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import space.jetbrains.api.runtime.SpaceHttpClient
 import space.jetbrains.api.runtime.resources.chats
-import space.jetbrains.api.runtime.types.*
+import space.jetbrains.api.runtime.types.ApplicationPayload
+import space.jetbrains.api.runtime.types.ChatMessage
+import space.jetbrains.api.runtime.types.MessageRecipient
+import space.jetbrains.api.runtime.types.ProfileIdentifier
 import space.jetbrains.api.runtime.withServiceAccountTokenSource
 import space.jetbrains.yana.verifyWithToken
+import javax.crypto.Mac
+import javax.crypto.spec.SecretKeySpec
 
 /**
  * Url of your Space instance.
@@ -14,7 +19,7 @@ import space.jetbrains.yana.verifyWithToken
  *
  * Example: https://instance.jetbrains.space
  */
-private const val spaceInstanceUrl = TODO("Place your Space instance url")
+private const val spaceInstanceUrl = "https://makentoshe.jetbrains.space"
 
 /**
  * Client for communication with Space. This implementation uses the Client Credentials auth flow.
@@ -49,9 +54,9 @@ val spaceClient = SpaceHttpClient(HttpClient(CIO)).withServiceAccountTokenSource
  */
 object ClientCredentialsFlow {
 
-    const val clientId: String = TODO("Place your Space client id")
+    const val clientId: String = "cfbee418-bac0-45fa-bd8e-191bbd295120"
 
-    const val clientSecret: String = TODO("Place your Space client secret")
+    const val clientSecret: String = "b4bd9f8b8599b39f56a7c54cdd8514165913d08c34aa19da3b926eafebe8c06e"
 }
 
 /**
@@ -76,7 +81,12 @@ object Endpoint {
             "userId": "2kawvQ4F6GM6"
         }
      */
-    const val verificationToken: String = TODO("Place your Space verification token")
+    const val verificationToken: String = "eef37259ab2805854593683b9e7776de3615a942cec7892bd2bc228ea1b47d7a"
+
+    /**
+     * The application calculates a hash for request and compares the result with the hash from the request.
+     */
+    const val signingKey: String = "23f4245714ea018a3b73f8b2731e241d0acee4f098ed14b6c2b1cafdd5d41ee8"
 
     /**
      * Verification of Space instance
@@ -86,6 +96,20 @@ object Endpoint {
     fun verify(payload: ApplicationPayload): Boolean {
         return payload.verifyWithToken(verificationToken)
     }
+
+    /**
+     * Verification of Space instance
+     *
+     * Calculates a hash from the signing key and compares with the hash from the call
+     */
+    fun verify(timestamp: String, signature: String, body: String): Boolean {
+        val hmacSha256 = Mac.getInstance("HmacSHA256")
+        hmacSha256.init(SecretKeySpec(signingKey.toByteArray(), "HmacSHA256"))
+        val hash = hmacSha256.doFinal("$timestamp:$body".toByteArray()).toHexString()
+        return hash == signature
+    }
+
+    private fun ByteArray.toHexString() = joinToString("") { (0xFF and it.toInt()).toString(16).padStart(2, '0') }
 }
 
 /**

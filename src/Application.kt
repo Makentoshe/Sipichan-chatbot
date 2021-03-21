@@ -30,12 +30,21 @@ fun Application.module(testing: Boolean = false) {
  *
  * readPayload(body: String) is the SDK helper function that receives JSON data from Space
  * and deserializes it into ApplicationPayload.
- * For example, in our case, the raw data from Space could look like follows:
  */
 fun Routing.chatbot() {
     post("api/chatbot") {
+        val receiveBody = call.receiveText()
+
+        val timestamp = call.request.headers["x-space-timestamp"]
+            ?: return@post call.respond(HttpStatusCode.BadRequest)
+        val signature = call.request.headers["x-space-signature"]
+            ?: return@post call.respond(HttpStatusCode.BadRequest)
+        if (!Endpoint.verify(timestamp, signature, receiveBody)) {
+            return@post call.respond(HttpStatusCode.Unauthorized)
+        }
+
         // read payload and verify Space instance
-        val payload = readPayload(call.receiveText())
+        val payload = readPayload(receiveBody)
         if (!Endpoint.verify(payload)) {
             return@post call.respond(HttpStatusCode.Unauthorized)
         }
